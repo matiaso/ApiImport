@@ -75,6 +75,23 @@ class Danslo_ApiImport_Model_Import_Entity_Product
     }
 
     /**
+     * Import behavior getter.
+     *
+     * @return string
+     */
+    public function getBehavior()
+    {
+        if (!isset($this->_parameters['behavior'])
+            || ($this->_parameters['behavior'] != Mage_ImportExport_Model_Import::BEHAVIOR_APPEND
+            && $this->_parameters['behavior'] != Mage_ImportExport_Model_Import::BEHAVIOR_REPLACE
+            && $this->_parameters['behavior'] != Mage_ImportExport_Model_Import::BEHAVIOR_DELETE
+            && $this->_parameters['behavior'] != Danslo_ApiImport_Model_Import::BEHAVIOR_STOCK)) {
+            return Mage_ImportExport_Model_Import::getDefaultBehavior();
+        }
+        return $this->_parameters['behavior'];
+    }
+
+    /**
      * Gets the internal category array used for category mapping.
      *
      * @return array
@@ -295,4 +312,28 @@ class Danslo_ApiImport_Model_Import_Entity_Product
         return $this;
     }
 
+    /**
+     * Returns an object for upload a media files
+     */
+    protected function _getUploader()
+    {
+        if (is_null($this->_fileUploader)) {
+            $this->_fileUploader = new Danslo_ApiImport_Model_Import_Uploader();
+
+            $this->_fileUploader->init();
+
+            $tmpDir     = Mage::getConfig()->getOptions()->getMediaDir() . '/import';
+            $destDir    = Mage::getConfig()->getOptions()->getMediaDir() . '/catalog/product';
+            if (!is_writable($destDir)) {
+                @mkdir($destDir, 0777, true);
+            }
+            if (!$this->_fileUploader->setTmpDir($tmpDir)) {
+                Mage::throwException("File directory '{$tmpDir}' is not readable.");
+            }
+            if (!$this->_fileUploader->setDestDir($destDir)) {
+                Mage::throwException("File directory '{$destDir}' is not writable.");
+            }
+        }
+        return $this->_fileUploader;
+    }
 }
